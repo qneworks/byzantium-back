@@ -1,0 +1,28 @@
+{
+  "name": "byzantium-back",
+  "version": "1.0.0",
+  "description": "비잔티움 프로젝트 백엔드",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src",
+    "start:dev": "nodemon --watch src/ src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qneworks/byzantium-back.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/qneworks/byzantium-back/issues"
+  },
+  "homepage": "https://github.com/qneworks/byzantium-back#readme",
+  "dependencies": {
+    "koa": "^2.13.4",
+    "koa-router": "^12.0.0",
+    "mariadb": "^3.0.1",
+    "nodemon": "^2.0.19"
+  }
+}
