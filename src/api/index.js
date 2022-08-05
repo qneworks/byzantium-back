@@ -1,12 +1,22 @@
 const Router = require('koa-router');
-const conn = require('../database/user.js')
+const connAdmin = require('../admin/admin.js')
+const connUser = require('../user/user.js')
 const api = new Router();
 
-// 로그인
-api.post('/login', conn.login);
 
-// 회원가입
-api.post('/signup', conn.signup);
+
+// 관리자 로그인
+api.post('/admin/login', connAdmin.login);
+
+
+
+
+
+// 사용자 로그인
+api.post('/user/login', connUser.login);
+
+// 사용자 회원가입
+api.post('/user/signup', connUser.signup);
 
 
 /*
