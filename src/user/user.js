@@ -1,15 +1,31 @@
 const mariadb = require('mariadb');
-const datasource = require('../config/datasource.js');
+const config = require('../config/config.js');
 const crypto = require("crypto-js");
+const mailer = require("nodemailer");
 
 const pool = mariadb.createPool({
-    host: datasource.hostname,
-    port: datasource.port,
-    user: datasource.username,
-    password: datasource.password,
-    database: datasource.database,
-    connectionLimit: datasource.limit
+    host: config.database.hostname,
+    port: config.database.port,
+    user: config.database.username,
+    password: config.database.password,
+    database: config.database.database,
+    connectionLimit: config.database.limit
 });
+
+const mail = mailer.createTransport({
+    service : config.mail.service,
+    port : config.mail.port,
+    host: config.mail.host,
+    auth: {
+        user: config.mail.user,
+        pass: config.mail.pass
+    }
+});
+
+let mailOptions = {
+    from: config.mail.from,
+    subject: config.mail.subsject
+};
 
 // 비밀번호 암호화
 const mkPwd = (pw) => {
@@ -87,4 +103,54 @@ exports.signup = async (ctx) => {
     finally{
         if (conn) conn.release();
     }
+}
+
+// 비밀번호 찾기
+exports.findPw = async (ctx) => {
+    // 파라미터 받기
+    let { id } = ctx.request.body;
+
+    let conn, rows, result;
+    try{
+        // DB 연결
+        conn = await pool.getConnection();
+
+        // ID 중복 확인
+        let sql = 'SELECT password, CASE WHEN count(*) = 1 THEN "true" ELSE "false" END AS isMember FROM users WHERE accountid="'+id+'"';
+        rows = await conn.query(sql);
+        result = rows[0];
+
+        // ID 중복 확인 후 처리
+        if (result.isMember === 'true') {
+            let newPw = result.password;
+            result = await sendMail(id, newPw);
+            ctx.body = result;
+        } else {
+            result = {code:"201", msg:"FAIL - This ID Not Exist"};
+            ctx.body = result;
+        }
+    }
+    catch(err){
+        result = {code:"400", msg:"FAIL"};
+        ctx.body = result;
+    }
+    finally{
+        if (conn) conn.release();
+    }
+}
+
+// 비밀번호 메일 전송
+const sendMail = async (id, newPw) => {
+    return new Promise((resolve, reject) => {
+        mailOptions.to = id;
+        mailOptions.text = newPw;
+        mail.sendMail(mailOptions, function(error, info){
+        if (error) {
+           reject({code:"201", msg:"FAIL - Mail Transfer failed"});
+        } else {
+            resolve({code:"200", msg:"SUCCESS - " + info.response});
+        }
+        mail.close();
+        })
+    })
 }

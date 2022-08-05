@@ -1,5 +1,5 @@
 const mariadb = require('mariadb');
-const datasource = require('../config/datasource.js');
+const datasource = require('../config/config.js');
 const crypto = require("crypto-js");
 
 const pool = mariadb.createPool({

@@ -18,6 +18,9 @@ api.post('/user/login', connUser.login);
 // 사용자 회원가입
 api.post('/user/signup', connUser.signup);
 
+// 사용자 비밀번호 찾기
+api.post('/user/findPw', connUser.findPw);
+
 
 /*
 api.post('/login', (ctx) => {
