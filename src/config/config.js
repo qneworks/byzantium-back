@@ -10,16 +10,33 @@ module.exports = {
   },
   // 메일 정보
   mail: {
+    /*
     // 메일 계정 정보
-    service: "gmail",
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    user: "hit910@qneworks.com",
-    pass: "qneworks1412!",
+    service : 'gmail',
+    host : 'smtp.gmail.com',
+    port : 587,
+    secure : false,
+    user : '',
+    pass : '',
 
     // 전송 옵션
-    from: "hit910@qneworks.com",
-    subsject: "새로운 임시 비밀번호",
+    from : '',
+    subsject : '새로운 임시 비밀번호',
+    
+    // 메일 계정 정보
+    service : 'Naver',
+    host : 'smtp.naver.com',
+    port : 465,
+    secure : false,
+    user : '',
+    pass : '',
+
+    // 전송 옵션
+    from : '',
+    subject : '새로운 임시 비밀번호',
+    */
+  },
+  jwt : {
+    secretKey : "738c9f2a8bab78f34044879b2fd14c0a8f79c04a"
   },
 };
