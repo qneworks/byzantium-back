@@ -12,7 +12,8 @@ exports.login = async (ctx) => {
 
     // sql
     let sql = 'SELECT accountid, name, phone, wallet, CASE WHEN count(*) = 1 THEN "true" ELSE "false" END AS isMember FROM users WHERE auth="admin" AND accountid="'+accountid+'" AND password="'+password+'"';
-    let result = await connon.query(sql);
+    let rows = await connon.query(sql);
+    let result = rows[0]
 
     if (result.isMember === 'true') {
         result.code = "200";

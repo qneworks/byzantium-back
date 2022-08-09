@@ -42,14 +42,11 @@ module.exports = {
   },
   makeToken(accountid, name) {
     const token = jwt.sign(
-        {
-            accountid: accountid,
-            name: name,
-        },
-        config.jwt.secretKey,
-        {
-            expiresIn : '3d'
-        }
+      {
+        accountid: accountid,
+        name: name,
+      },
+      config.jwt.secretKey
     );
     return token;
   },

@@ -2,7 +2,7 @@ const crypto = require('crypto-js');
 const utils = require('../../utils/utils');
 const connon = require('../../utils/common');
 
-
+// 로그인
 exports.login = async (ctx) => {
     // 파라미터 받기
     let { accountid, password } = ctx.request.body;
@@ -11,48 +11,64 @@ exports.login = async (ctx) => {
     password = utils.makePassword(password);
 
     // sql
-    let sql = 'SELECT accountid, name, phone, wallet, CASE WHEN count(*) = 1 THEN "true" ELSE "false" END AS isMember FROM users WHERE auth="user" AND accountid="'+accountid+'" AND password="'+password+'"';
-    let result = await connon.query(sql);
+    let sql = 'SELECT accountid, name, phone, wallet, IF(count(accountid) > 0, "Y", "N") AS admitYn FROM users WHERE auth="user" AND accountid="'+accountid+'" AND password="'+password+'"';
 
-    if (result.isMember === 'true') {
-        result.code = "200";
-        result.mes = "성공";
-        let token = utils.makeToken(result.accountid, result.name);
-        //result.token = token;
+    // db 조회
+    let rows = await connon.select(sql);
 
-        // 쿠키에 저장이 안된다....?
+    // JWT 
+    if (rows.data.admitYn === 'Y') {
+        // 토큰 발행
+        let token = utils.makeToken(rows.data.accountid, rows.data.name);
+
+        // 쿠키에 저장
         ctx.cookies.set('token', token, {
             maxAge : 1000 * 60 * 60 * 24 * 3,
             httpOnly : true,
         });
-    } else {
-        //throw {code:"201", msg:"FAIL - This ID Not Exist"};
-        result = {code:"201", msg:"로그인 정보가 잘못되었습니다."};
     }
-    ctx.body = result;
+
+    // 응답
+    ctx.body = rows;
 }
 
 // 회원가입
 exports.signup = async (ctx) => {
-     // 파라미터 받기
-     let { accountid, password, name, phone } = ctx.request.body;
+    // 파라미터 받기
+    let { accountid, password, name, phone } = ctx.request.body;
 
-     // 비밀번호 암호화
-     password = utils.makePassword(password);
+    // 비밀번호 암호화
+    password = utils.makePassword(password);
 
-     // sql
-     let sql = 'SELECT CASE WHEN count(*) = 1 THEN "true" ELSE "false" END AS isMember FROM users WHERE accountid="'+accountid+'"';
-     let result = await connon.query(sql);
+    // 검증?
+    let sql = 'SELECT IF(count(accountid) > 0, "Y", "N") AS isMember FROM users WHERE accountid="'+accountid+'"';
+    let rows = await connon.select(sql);
 
-     if (result.isMember === 'true') {
-        //throw {code:"201", msg:"FAIL - ID Already Exist"};
-        result = {code:"201", msg:"이미 존재하는 계정입니다."};
-    } else {
+    if (rows.data.isMember === 'N') {
+        // inset 실행
         sql = 'INSERT INTO users ( accountid, password, name, phone ) values ( "'+accountid+'", "'+password+'", "'+name+'", "'+phone+'" )';
-        result = await connon.query(sql);
-        result = {code:"200", msg:"성공"};
+        rows = await connon.insert(sql);
+
+    } else {
+        //throw {code:"201", msg:"FAIL - ID Already Exist"};
+        rows.data.msg = "이미 존재하는 계정입니다.";
     }
-    ctx.body = result;
+    ctx.body = rows;
+}
+
+// 아이디 찾기
+exports.findId = async (ctx) => {
+    // 파라미터 받기
+    let { phone } = ctx.request.body;
+
+    // sql 생성
+    let sql = 'SELECT accountid FROM users WHERE phone="'+phone+'"';
+
+    // db 조회
+    let rows = await connon.selectList(sql);
+    
+    // 응답
+    ctx.body = rows;
 }
 
 // 비밀번호 찾기
@@ -60,19 +76,21 @@ exports.findPassword = async (ctx) => {
     // 파라미터 받기
     let { accountid } = ctx.request.body;
 
-    // sql
-    let sql = 'SELECT password, CASE WHEN count(*) = 1 THEN "true" ELSE "false" END AS isMember FROM users WHERE accountid="'+accountid+'"';
-    let result = await connon.query(sql);
+    // sql 생성
+    let sql = 'SELECT password, IF(count(accountid) > 0, "Y", "N") AS isMember FROM users WHERE accountid="'+accountid+'"';
+
+    // db 조회
+    let rows = await connon.select(sql);
 
     // ID 확인 후 처리
-    if (result.isMember === 'true') {
-        let newPw = result.password;
+    if (rows.data.isMember === 'Y') {
+        let newPw = rows.data.password;
         let mailer = utils.createMailer();
         let mailerOption = utils.setMailerOption(accountid, newPw);
-        result = await connon.sendMail(mailer, mailerOption);
+        rows = await connon.sendMail(mailer, mailerOption);
     } else {
         //throw {code:"201", msg:"FAIL - This ID Not Exist"};
-        result = {code:"201", msg:"로그인 정보가 잘못되었습니다."};
+        rows.data.msg = "로그인 정보가 잘못되었습니다.";
     }
-    ctx.body = result;
+    ctx.body = rows;
 }
