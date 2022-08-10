@@ -7,8 +7,9 @@ const app = new Koa();
 const router = new Router();
 
 app.use(bodyParser());
-router.use('/api', api.routes());
 app.use(router.routes()).use(router.allowedMethods());
+
+router.use('/api', api.routes());
 
 app.listen(8800, () => {
     console.log('Listening to port 8800');

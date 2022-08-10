@@ -2,6 +2,7 @@
 const mailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const config = require("../config/config");
+const moment = require("moment");
 
 module.exports = {
   /*
@@ -45,9 +46,28 @@ module.exports = {
       {
         accountid: accountid,
         name: name,
+        //exp: Date.now() +1000 * 60 * 60 * 24 // 24시간
+        exp: Date.now() +1000 * 60 * 60 * 10
       },
       config.jwt.secretKey
     );
     return token;
   },
+  verifyToken(ctx, key) {
+    let loginId = ctx.cookis.get('loginId');
+    let token = ctx.cookis.get('token');
+
+    let deCode = jwt.verify(token, key);
+    let exp = deCode.exp;
+    let id = deCode.accountid;
+
+    if (exp < Date.now()) {
+      return {result : false, msg : "토근 만료"};
+    }
+    if (loginId !== id) {
+      return {result : false, msg : "ID 불일치"};
+    }
+
+    return {result : true, msg : "정상"};
+  }
 };

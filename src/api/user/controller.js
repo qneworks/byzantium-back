@@ -2,6 +2,7 @@ const crypto = require('crypto-js');
 const utils = require('../../utils/utils');
 const connon = require('../../utils/common');
 
+
 // 로그인
 exports.login = async (ctx) => {
     // 파라미터 받기
@@ -50,8 +51,8 @@ exports.signup = async (ctx) => {
         rows = await connon.insert(sql);
 
     } else {
-        //throw {code:"201", msg:"FAIL - ID Already Exist"};
-        rows.data.msg = "이미 존재하는 계정입니다.";
+        rows.code = "1";
+        rows.msg = "이미 존재하는 계정입니다.";
     }
     ctx.body = rows;
 }
@@ -89,8 +90,8 @@ exports.findPassword = async (ctx) => {
         let mailerOption = utils.setMailerOption(accountid, newPw);
         rows = await connon.sendMail(mailer, mailerOption);
     } else {
-        //throw {code:"201", msg:"FAIL - This ID Not Exist"};
-        rows.data.msg = "로그인 정보가 잘못되었습니다.";
+        rows.code = "1";
+        rows.msg = "로그인 정보가 잘못되었습니다.";
     }
     ctx.body = rows;
 }

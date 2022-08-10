@@ -21,7 +21,7 @@ exports.query = async (sql) => {
     rows = await conn.query(sql);
     return rows;
   } catch (err) {
-    throw { code: "400", msg: "FAIL" };
+    throw { code: "1", msg: "FAIL" };
   } finally {
     if (conn) conn.end();
   }
@@ -34,11 +34,11 @@ exports.insert = async (sql) => {
     conn = await pool.getConnection();
     await conn.query(sql);
 
-    returnData.code = "0000";
+    returnData.code = "0";
     returnData.msg = "INSERT SUCCESS";
   } catch (err) {
     //throw { code: "400", msg: "FAIL" };
-    returnData.code = "9999";
+    returnData.code = "1";
     returnData.msg = "INSERT FAIL";
   } finally {
     if (conn) conn.end();
@@ -54,11 +54,11 @@ exports.select = async (sql) => {
     rows = await conn.query(sql);
 
     returnData.data = rows[0];
-    returnData.code = "0000";
+    returnData.code = "0";
     returnData.msg = "SELECT SUCCESS";
   } catch (err) {
     //throw { code: "400", msg: "FAIL" };
-    returnData.code = "9999";
+    returnData.code = "1";
     returnData.msg = "SELECT FAIL";
   } finally {
     if (conn) conn.end();
@@ -79,11 +79,11 @@ exports.selectList = async (sql) => {
       returnData.list.push(element);
     });
 
-    returnData.code = "0000";
+    returnData.code = "0";
     returnData.msg = "SELECT_LIST SUCCESS";
   } catch (err) {
     //throw { code: "400", msg: "FAIL" };
-    returnData.code = "9999";
+    returnData.code = "1";
     returnData.msg = "SELECT_LIST FAIL";
   } finally {
     if (conn) conn.end();
@@ -96,9 +96,11 @@ exports.sendMail = async (mailer, option) => {
     mailer.sendMail(option, function (error, info) {
       let returnData = new dataSet();
       if (error) {
+        returnData.msg = "1";
         returnData.msg = "Mail Transfer failed";
         reject(returnData);
       } else {
+        returnData.msg = "0";
         returnData.msg = "Mail Transfer success" + info.response;
         resolve(returnData);
       }

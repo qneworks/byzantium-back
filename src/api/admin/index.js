@@ -1,5 +1,5 @@
 const Router = require('koa-router');
-const controller = require('./admin.controller');
+const controller = require('./controller');
 const router = new Router();
 
 // 관리자 로그인

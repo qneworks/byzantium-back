@@ -26,4 +26,18 @@ Tailwind CSS는 Utility-First 컨셉을 가진 CSS 프레임워크.
 ### GoogleDrive
   https://drive.google.com/drive/folders/1xf1b5cwE2NduHZEoMwuYWeyAiv3oAsxU
 
+## URL
+### login
+  http://localhost:8800/api/user/login          {accountid : '', password : ''}
+  http://localhost:8800/api/admin/login         {accountid : '', password : ''}
+### signup
+  http://localhost:8800/api/user/login          {accountid : '', password : '', name : '', phone : ''}
+### findId
+  http://localhost:8800/api/user/findId         {phone : ''}
+### findPassword
+  http://localhost:8800/api/user/findPassword   {accountid : ''}
+
+
+
+
 ## etc
