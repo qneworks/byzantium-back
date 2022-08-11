@@ -65,8 +65,6 @@ exports.findPassword = async (ctx) => {
         let newPw = svc.makePassword(rows.data.password, 'find');
         let hashPw = svc.makePassword(newPw, 'other');
 
-        console.log(hashPw)
-        
         // 생성한 비밀번호 DB저장
         sql = `UPDATE users SET password = "${hashPw}" WHERE accountid = "${email}"`;
         rows = await connon.update(sql);

@@ -35,17 +35,6 @@ module.exports = {
     from : '',
     subject : '새로운 임시 비밀번호',
     */
-   // 메일 계정 정보
-   service : 'Naver',
-   host : 'smtp.naver.com',
-   port : 465,
-   secure : false,
-   user : 'hit910@naver.com',
-   pass : 'inteak152412@',
-
-   // 전송 옵션
-   from : 'hit910@naver.com',
-   subsject : '새로운 임시 비밀번호',
   },
   jwt: {
     secretKey: '738c9f2a8bab78f34044879b2fd14c0a8f79c04a',
