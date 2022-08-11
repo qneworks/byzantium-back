@@ -37,7 +37,7 @@ exports.select = async (sql) => {
   try {
     conn = await pool.getConnection();
     rows = await conn.query(sql);
-    returnData.data = rows[0];
+    returnData.value = rows[0];
     returnData.code = '0';
     returnData.msg = lang.SUCCESS;
   } catch (err) {
@@ -57,7 +57,7 @@ exports.selectList = async (sql) => {
     rows = await conn.query(sql);
 
     // 데이터 변환?
-    returnData.data = new Array(rows)[0];
+    returnData.value = new Array(rows)[0];
     returnData.code = '0';
     returnData.msg = lang.SUCCESS;
   } catch (err) {

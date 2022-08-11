@@ -13,8 +13,8 @@ exports.signin = async (ctx) => {
     const rows = await connon.select(sql);
 
     // JWT 
-    if (rows.data.admitYn === 'Y') {
-        let token = await svc.makeToken(rows.data.accountid, rows.data.name);
+    if (rows.value.admitYn === 'Y') {
+        let token = await svc.makeToken(rows.value.accountid, rows.value.name);
         ctx.cookies.set('token', token, {
             maxAge : 1000 * 60 * 60 * 24 * 3,
             httpOnly : true,
@@ -32,7 +32,7 @@ exports.signup = async (ctx) => {
     let sql = `SELECT IF(count(accountid) > 0, "Y", "N") AS isMember FROM users WHERE accountid="${email}"`;
     let rows = await connon.select(sql);
 
-    if (rows.data.isMember === 'N') {
+    if (rows.value.isMember === 'N') {
         sql = `INSERT INTO users ( accountid, password, name, phone ) values ( "${email}", "${password}", "${name}", "${phone}" )`;
         rows = await connon.insert(sql);
 
@@ -60,9 +60,9 @@ exports.findPassword = async (ctx) => {
     let rows = await connon.select(sql);
 
     // 비밀번호 메일로 보내기
-    if (rows.data.isMember === 'Y') {
-        //let newPw = rows.data.password;
-        let newPw = svc.makePassword(rows.data.password, 'find');
+    if (rows.value.isMember === 'Y') {
+        //let newPw = rows.value.password;
+        let newPw = svc.makePassword(rows.value.password, 'find');
         let hashPw = svc.makePassword(newPw, 'other');
 
         // 생성한 비밀번호 DB저장
@@ -87,7 +87,7 @@ exports.userInfo = async (ctx) => {
     const rows = await connon.select(sql);
 
     // 비밀번호 메일로 보내기
-    if (rows.data.isMember === 'N') {
+    if (rows.value.isMember === 'N') {
         rows.code = '1';
         rows.msg = lang.ACCUONT.IS_NOT_MEMBER;
     }
