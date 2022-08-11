@@ -67,3 +67,21 @@ exports.selectList = async (sql) => {
   }
   return returnData;
 };
+
+exports.update = async (sql) => {
+  let conn;
+  let returnData = utils.dataSet;
+  try {
+    conn = await pool.getConnection();
+    await conn.query(sql);
+
+    returnData.code = '0';
+    returnData.msg = 'UPDATE SUCCESS';
+  } catch (err) {
+    returnData.code = '1';
+    returnData.msg = 'UPDATE FAIL';
+  } finally {
+    if (conn) conn.end();
+  }
+  return returnData;
+};

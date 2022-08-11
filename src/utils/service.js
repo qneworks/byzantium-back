@@ -15,8 +15,8 @@ exports.makePassword = (password, type) => {
     }
     return randomstring;
   } else {
-    //return crypto.SHA256(password).toString();
-    return password;
+    return crypto.SHA256(password).toString();
+    //return password;
   }
 };
 

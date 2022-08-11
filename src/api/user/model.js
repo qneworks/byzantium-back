@@ -5,10 +5,10 @@ const svc = require('../../utils/service');
 
 // 로그인
 exports.login = async (ctx) => {
-    let { accountid, password } = ctx.request.body;
+    let { email, password } = ctx.request.body;
     password = svc.makePassword(password, 'other');
 
-    let sql = `SELECT accountid, name, phone, wallet, IF(COUNT(accountid) > 0, "Y", "N") AS admitYn FROM users WHERE auth="user" AND accountid="${accountid}" AND password="${password}"`;
+    let sql = `SELECT accountid, name, phone, wallet, IF(COUNT(accountid) > 0, "Y", "N") AS admitYn FROM users WHERE auth="user" AND accountid="${email}" AND password="${password}"`;
     let rows = await connon.select(sql);
 
     // JWT 
@@ -24,15 +24,16 @@ exports.login = async (ctx) => {
 
 // 회원가입
 exports.signup = async (ctx) => {
-    let { accountid, password, name, phone } = ctx.request.body;
+    console.dir(ctx.request.body)
+    let { email, password, name, phone } = ctx.request.body;
     password = svc.makePassword(password, 'other');
 
     // 아이디 중복확인
-    let sql = `SELECT IF(count(accountid) > 0, "Y", "N") AS isMember FROM users WHERE accountid="${accountid}"`;
+    let sql = `SELECT IF(count(accountid) > 0, "Y", "N") AS isMember FROM users WHERE accountid="${email}"`;
     let rows = await connon.select(sql);
 
     if (rows.data.isMember === 'N') {
-        sql = `INSERT INTO users ( accountid, password, name, phone ) values ( "${accountid}", "${password}", "${name}", "${phone}" )`;
+        sql = `INSERT INTO users ( accountid, password, name, phone ) values ( "${email}", "${password}", "${name}", "${phone}" )`;
         rows = await connon.insert(sql);
 
     } else {
@@ -53,20 +54,25 @@ exports.findId = async (ctx) => {
 
 // 비밀번호 찾기
 exports.findPassword = async (ctx) => {
-    let { accountid } = ctx.request.body;
-    
-    let sql = `SELECT password, IF(COUNT(accountid) > 0, "Y", "N") AS isMember FROM users WHERE accountid="${accountid}"`;
+    let { email } = ctx.request.body;
+
+    let sql = `SELECT password, IF(COUNT(accountid) > 0, "Y", "N") AS isMember FROM users WHERE accountid="${email}"`;
     let rows = await connon.select(sql);
 
     // 비밀번호 메일로 보내기
     if (rows.data.isMember === 'Y') {
-        let newPw = rows.data.password;
-        //let newPw = svc.makePassword(rows.data.password, 'find');
+        //let newPw = rows.data.password;
+        let newPw = svc.makePassword(rows.data.password, 'find');
+        let hashPw = svc.makePassword(newPw, 'other');
+
+        console.log(hashPw)
         
         // 생성한 비밀번호 DB저장
+        sql = `UPDATE users SET password = "${hashPw}" WHERE accountid = "${email}"`;
+        rows = await connon.update(sql);
         
         // 메일 전송
-        mail.sendMail(accountid, newPw);
+        mail.sendMail(email, newPw);
         
     } else {
         rows.code = '1';

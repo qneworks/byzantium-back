@@ -11,8 +11,9 @@ const router = new Router();
 router.use('/', async (ctx, next) => {
     let path = ctx.path;
 
-    // 경로에 user, admin 있을 때만...
-    if (path.includes('user', 'admin')) {
+    // 검증이 필요한 애들....
+    let pages = ['login']
+    if (path.includes(pages)) {
         let res = await svc.verifyToken(ctx);
         if (res.code === "0") {
             await next();
