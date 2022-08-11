@@ -2,12 +2,12 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto-js');
 const utils = require('./utils');
 const config = require('../config/config');
+const lang = require('../config/lang');
 
 // 비밀번호 생성
 exports.makePassword = (password, type) => {
   if (type === 'find') {
-    const chars =
-      '0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz';
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz';
     let randomstring = '';
     for (let i = 0; i < 6; i++) {
       const rnum = Math.floor(Math.random() * chars.length);
@@ -21,11 +21,11 @@ exports.makePassword = (password, type) => {
 };
 
 // 로그인 토큰 생성
-exports.makeToken = async (accountid, name) => {
+exports.makeToken = async (accountid) => {
   return jwt.sign(
     {
+      // 토큰으로 검증할 데이터
       accountid: accountid,
-      name: name,
       exp: Date.now() + 1000 * 60 * 60 * 24,
     },
     config.jwt.secretKey
@@ -44,18 +44,14 @@ exports.verifyToken = async (ctx) => {
   let returnData = utils.dataSet;
   if (exp < Date.now()) {
     returnData.code = '1';
-    returnData.msg = '토큰이 만료되었습니다.';
+    returnData.msg = lang.JWS.EXPIRE;
   }
   if (loginId !== id) {
     returnData.code = '1';
-    returnData.msg = '계정 정보가 일치하지 않습니다.';
+    returnData.msg = lang.JWS.DISAGREEMENT;
   }
 
   returnData.code = '0';
-  returnData.msg = '정상.';
-
-  // test
-  returnData.code = '1';
-  returnData.msg = '토큰이 만료되었습니다.';
+  returnData.msg = lang.SUCCESS;
   return returnData;
 };

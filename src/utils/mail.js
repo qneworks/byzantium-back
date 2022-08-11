@@ -1,5 +1,6 @@
 const mailer = require('nodemailer');
 const config = require('../config/config');
+const lang = require('../config/lang');
 
 // 메일 전송 객체 생성
 const createMailer = async () => {
@@ -15,12 +16,12 @@ const createMailer = async () => {
 };
 
 // 메일 옵션
-const setMailerOption = async (to, msg) => {
+const setMailerOption = async (to, newPw) => {
   return {
     from: config.mail.from,
     to: to,
-    subject: config.mail.subject,
-    text: msg,
+    subject: lang.MAIL.SUBJECT,
+    html: lang.MAIL.CONTENT(newPw),
   };
 };
 

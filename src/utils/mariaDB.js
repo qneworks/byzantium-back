@@ -1,6 +1,8 @@
 const mariadb = require('mariadb');
-const config = require('../config/config');
 const utils = require('./utils');
+const config = require('../config/config');
+const lang = require('../config/lang');
+
 
 const pool = mariadb.createPool({
   host: config.database.hostname,
@@ -19,10 +21,10 @@ exports.insert = async (sql) => {
     await conn.query(sql);
 
     returnData.code = '0';
-    returnData.msg = 'INSERT SUCCESS';
+    returnData.msg = lang.SUCCESS;
   } catch (err) {
     returnData.code = '1';
-    returnData.msg = 'INSERT FAIL';
+    returnData.msg = lang.FAIL;
   } finally {
     if (conn) conn.end();
   }
@@ -37,10 +39,10 @@ exports.select = async (sql) => {
     rows = await conn.query(sql);
     returnData.data = rows[0];
     returnData.code = '0';
-    returnData.msg = 'SELECT SUCCESS';
+    returnData.msg = lang.SUCCESS;
   } catch (err) {
     returnData.code = '1';
-    returnData.msg = 'SELECT FAIL';
+    returnData.msg = lang.FAIL;
   } finally {
     if (conn) conn.end();
   }
@@ -57,11 +59,10 @@ exports.selectList = async (sql) => {
     // 데이터 변환?
     returnData.data = new Array(rows)[0];
     returnData.code = '0';
-    returnData.msg = 'SELECT_LIST SUCCESS';
+    returnData.msg = lang.SUCCESS;
   } catch (err) {
-    //throw { code: '400', msg: 'FAIL' };
     returnData.code = '1';
-    returnData.msg = 'SELECT_LIST FAIL';
+    returnData.msg = lang.FAIL;
   } finally {
     if (conn) conn.end();
   }
@@ -76,10 +77,10 @@ exports.update = async (sql) => {
     await conn.query(sql);
 
     returnData.code = '0';
-    returnData.msg = 'UPDATE SUCCESS';
+    returnData.msg = lang.SUCCESS;
   } catch (err) {
     returnData.code = '1';
-    returnData.msg = 'UPDATE FAIL';
+    returnData.msg = lang.FAIL;
   } finally {
     if (conn) conn.end();
   }

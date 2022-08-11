@@ -13,27 +13,23 @@ module.exports = {
     /*
     // 메일 계정 정보
     service : 'gmail',
-    host : 'smtp.gmail.com',
     port : 587,
-    secure : false,
+    host : 'smtp.gmail.com',
     user : '',
     pass : '',
 
     // 전송 옵션
     from : '',
-    subsject : '새로운 임시 비밀번호',
     
     // 메일 계정 정보
     service : 'Naver',
-    host : 'smtp.naver.com',
     port : 465,
-    secure : false,
+    host : 'smtp.naver.com',
     user : '',
     pass : '',
 
     // 전송 옵션
     from : '',
-    subject : '새로운 임시 비밀번호',
     */
   },
   jwt: {
