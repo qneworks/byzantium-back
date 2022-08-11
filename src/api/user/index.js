@@ -1,17 +1,18 @@
 const Router = require('koa-router');
-const controller = require('./controller');
+const model = require('./model');
 const router = new Router();
 
 // 사용자 로그인
-router.post('/login', controller.login);
+router.post('/login', model.login);
 
 // 사용자 회원가입
-router.put('/signup', controller.signup);
+router.put('/signup', model.signup);
 
 // 사용자 아이디 찾기
-router.get('/findId', controller.findId);
+router.get('/findId', model.findId);
 
 // 사용자 비밀번호 찾기
-router.get('/findPassword', controller.findPassword);
+router.get('/findPassword', model.findPassword);
+
 
 module.exports = router;
