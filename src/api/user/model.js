@@ -23,7 +23,7 @@ exports.signin = async (ctx) => {
         });
     } else {
         rows.code = '1';
-        rows.msg = lang.ACCUONT.DISAGREEMENT;
+        rows.message = lang.ACCUONT.DISAGREEMENT;
     }
     ctx.body = rows;
 }
@@ -55,7 +55,7 @@ exports.signup = async (ctx) => {
 
     } else {
         rows.code = '1';
-        rows.msg = lang.ACCUONT.ALREADY_EXIXT;
+        rows.message = lang.ACCUONT.ALREADY_EXIXT;
     }
     ctx.body = rows;
 }
@@ -91,7 +91,7 @@ exports.findPassword = async (ctx) => {
         
     } else {
         rows.code = '1';
-        rows.msg = lang.ACCUONT.IS_NOT_MEMBER;
+        rows.message = lang.ACCUONT.IS_NOT_MEMBER;
     }
     ctx.body = rows;
 }
@@ -106,7 +106,7 @@ exports.userInfo = async (ctx) => {
     // 비밀번호 메일로 보내기
     if (rows.value.isMember === 'N') {
         rows.code = '1';
-        rows.msg = lang.ACCUONT.IS_NOT_MEMBER;
+        rows.message = lang.ACCUONT.IS_NOT_MEMBER;
     }
     ctx.body = rows;
 }

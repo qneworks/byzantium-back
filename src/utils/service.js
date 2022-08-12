@@ -44,14 +44,14 @@ exports.verifyToken = async (ctx) => {
   let returnData = utils.dataSet;
   if (exp < Date.now()) {
     returnData.code = '1';
-    returnData.msg = lang.JWS.EXPIRE;
+    returnData.message = lang.JWS.EXPIRE;
   }
   if (loginId !== id) {
     returnData.code = '1';
-    returnData.msg = lang.JWS.DISAGREEMENT;
+    returnData.message = lang.JWS.DISAGREEMENT;
   }
 
   returnData.code = '0';
-  returnData.msg = lang.SUCCESS;
+  returnData.message = lang.SUCCESS;
   return returnData;
 };

@@ -3,7 +3,7 @@
 exports.dataSet = new function() {
   this.value = {};
   this.code = "";
-  this.msg = "";
+  this.message = "";
 };
 
 

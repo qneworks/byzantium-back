@@ -21,10 +21,10 @@ exports.insert = async (sql) => {
     await conn.query(sql);
 
     returnData.code = '0';
-    returnData.msg = lang.SUCCESS;
+    returnData.message = lang.SUCCESS;
   } catch (err) {
     returnData.code = '1';
-    returnData.msg = lang.FAIL;
+    returnData.message = lang.FAIL;
   } finally {
     if (conn) conn.end();
   }
@@ -39,10 +39,10 @@ exports.select = async (sql) => {
     rows = await conn.query(sql);
     returnData.value = rows[0];
     returnData.code = '0';
-    returnData.msg = lang.SUCCESS;
+    returnData.message = lang.SUCCESS;
   } catch (err) {
     returnData.code = '1';
-    returnData.msg = lang.FAIL;
+    returnData.message = lang.FAIL;
   } finally {
     if (conn) conn.end();
   }
@@ -59,10 +59,10 @@ exports.selectList = async (sql) => {
     // 데이터 변환?
     returnData.value = new Array(rows)[0];
     returnData.code = '0';
-    returnData.msg = lang.SUCCESS;
+    returnData.message = lang.SUCCESS;
   } catch (err) {
     returnData.code = '1';
-    returnData.msg = lang.FAIL;
+    returnData.message = lang.FAIL;
   } finally {
     if (conn) conn.end();
   }
@@ -77,10 +77,10 @@ exports.update = async (sql) => {
     await conn.query(sql);
 
     returnData.code = '0';
-    returnData.msg = lang.SUCCESS;
+    returnData.message = lang.SUCCESS;
   } catch (err) {
     returnData.code = '1';
-    returnData.msg = lang.FAIL;
+    returnData.message = lang.FAIL;
   } finally {
     if (conn) conn.end();
   }
