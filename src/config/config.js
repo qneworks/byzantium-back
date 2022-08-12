@@ -35,4 +35,9 @@ module.exports = {
   jwt: {
     secretKey: '738c9f2a8bab78f34044879b2fd14c0a8f79c04a',
   },
+  tron: {
+    secretKey: '738c9f2a8bab78f34044879b2fd14c0a8f79c04a',
+    apiKey: '0e976043-a5f1-4f5c-872c-baec0a22990d',
+  }
+
 };

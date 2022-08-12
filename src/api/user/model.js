@@ -2,6 +2,7 @@ const mail = require('../../utils/mail');
 const connon = require('../../utils/mariaDB');
 const svc = require('../../utils/service');
 const lang = require('../../config/lang');
+const tronweb = require('../../tronWeb/tronWeb');
 
 
 // 로그인
@@ -14,11 +15,15 @@ exports.signin = async (ctx) => {
 
     // JWT 
     if (rows.value.admitYn === 'Y') {
+        rows.value.wallet = JSON.parse(rows.value.wallet);
         let token = await svc.makeToken(rows.value.accountid, rows.value.name);
         ctx.cookies.set('token', token, {
             maxAge : 1000 * 60 * 60 * 24 * 3,
             httpOnly : true,
         });
+    } else {
+        rows.code = '1';
+        rows.msg = lang.ACCUONT.DISAGREEMENT;
     }
     ctx.body = rows;
 }
@@ -33,7 +38,19 @@ exports.signup = async (ctx) => {
     let rows = await connon.select(sql);
 
     if (rows.value.isMember === 'N') {
-        sql = `INSERT INTO users ( accountid, password, name, phone ) values ( "${email}", "${password}", "${name}", "${phone}" )`;
+        // 지갑 생성
+        const wallet = JSON.stringify(await tronweb.createAccount());
+        /*
+        const wallet = await tronweb.createAccount();
+        console.dir(wallet);
+        let savWallet = wallet;
+        delete savWallet.privateKey;
+        console.dir(savWallet);
+        savWallet = JSON.stringify(savWallet);
+        */
+
+        //sql = `INSERT INTO users ( accountid, password, name, phone, wallet ) values ( '${email}', '${password}', '${name}', '${phone}', '${savWallet}' )`;
+        sql = `INSERT INTO users ( accountid, password, name, phone, wallet ) values ( '${email}', '${password}', '${name}', '${phone}', '${wallet}' )`;
         rows = await connon.insert(sql);
 
     } else {

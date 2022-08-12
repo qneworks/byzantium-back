@@ -43,7 +43,8 @@ module.exports = {
 
     ACCUONT : {
         ALREADY_EXIXT : '이미 가입된 계정입니다.',
-        IS_NOT_MEMBER : '가입된 계정이 아닙니다.'
+        IS_NOT_MEMBER : '가입된 계정이 아닙니다.',
+        DISAGREEMENT : '아이디/비밀번호를 확인하세요.'
     }
 
 }

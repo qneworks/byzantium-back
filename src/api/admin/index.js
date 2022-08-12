@@ -3,6 +3,6 @@ const model = require('./model');
 const router = new Router();
 
 // 관리자 로그인
-router.post('/login', model.login);
+router.post('/signin', model.signin);
 
 module.exports = router;

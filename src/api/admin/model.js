@@ -3,7 +3,7 @@ const connon = require('../../utils/mariaDB');
 
 
 // 로그인
-exports.login = async (ctx) => {
+exports.signin = async (ctx) => {
     let { email, password } = ctx.request.body;
     password = svc.makePassword(password, 'other');
 
