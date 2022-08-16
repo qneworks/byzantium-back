@@ -10,7 +10,7 @@ exports.signin = async (ctx) => {
     let { email, password } = ctx.request.body;
     password = svc.makePassword(password, 'other');
 
-    const sql = `SELECT accountid, name, phone, wallet, IF(COUNT(accountid) > 0, "Y", "N") AS admitYn FROM users WHERE auth="user" AND accountid="${email}" AND password="${password}"`;
+    const sql = `SELECT accountid, name, phone, auth, wallet, IF(COUNT(accountid) > 0, "Y", "N") AS admitYn FROM users WHERE auth="user" AND accountid="${email}" AND password="${password}"`;
     const rows = await maria.select(sql);
 
     // JWT 
