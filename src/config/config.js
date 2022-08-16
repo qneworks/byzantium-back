@@ -38,7 +38,8 @@ module.exports = {
   tron: {
     secretKey: '738c9f2a8bab78f34044879b2fd14c0a8f79c04a',
     apiKey: '0e976043-a5f1-4f5c-872c-baec0a22990d',
-    adminAddr: 'TTCn7Brdc41eGEPxUAN9NvmymRad5tTeR5' // base58
+    adminAddr: 'TTCn7Brdc41eGEPxUAN9NvmymRad5tTeR5', // base58
+    adminPriKey: 'E6338E64B7BDA38763A2B84A327A02B61D2610E5FF986EC6C3F30129461A9200',
   }
 
 };

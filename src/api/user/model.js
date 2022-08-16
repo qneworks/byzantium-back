@@ -1,5 +1,5 @@
 const mail = require('../../utils/mail');
-const connon = require('../../utils/mariaDB');
+const maria = require('../../utils/mariaDB');
 const svc = require('../../utils/service');
 const lang = require('../../config/lang');
 const tronweb = require('../../tronWeb/tronWeb');
@@ -11,7 +11,7 @@ exports.signin = async (ctx) => {
     password = svc.makePassword(password, 'other');
 
     const sql = `SELECT accountid, name, phone, wallet, IF(COUNT(accountid) > 0, "Y", "N") AS admitYn FROM users WHERE auth="user" AND accountid="${email}" AND password="${password}"`;
-    const rows = await connon.select(sql);
+    const rows = await maria.select(sql);
 
     // JWT 
     if (rows.value.admitYn === 'Y') {
@@ -35,7 +35,7 @@ exports.signup = async (ctx) => {
 
     // 아이디 중복확인
     let sql = `SELECT IF(count(accountid) > 0, "Y", "N") AS isMember FROM users WHERE accountid="${email}"`;
-    let rows = await connon.select(sql);
+    let rows = await maria.select(sql);
 
     if (rows.value.isMember === 'N') {
         // 지갑 생성
@@ -51,7 +51,7 @@ exports.signup = async (ctx) => {
 
         //sql = `INSERT INTO users ( accountid, password, name, phone, wallet ) values ( '${email}', '${password}', '${name}', '${phone}', '${savWallet}' )`;
         sql = `INSERT INTO users ( accountid, password, name, phone, wallet ) values ( '${email}', '${password}', '${name}', '${phone}', '${wallet}' )`;
-        rows = await connon.insert(sql);
+        rows = await maria.insert(sql);
 
     } else {
         rows.code = '1';
@@ -65,7 +65,7 @@ exports.findId = async (ctx) => {
     let { phone } = ctx.request.body;
 
     const sql = `SELECT accountid FROM users WHERE phone="${phone}"`;
-    const rows = await connon.selectList(sql);
+    const rows = await maria.selectList(sql);
     ctx.body = rows;
 }
 
@@ -74,7 +74,7 @@ exports.findPassword = async (ctx) => {
     let { email } = ctx.request.body;
 
     let sql = `SELECT password, IF(COUNT(accountid) > 0, "Y", "N") AS isMember FROM users WHERE accountid="${email}"`;
-    let rows = await connon.select(sql);
+    let rows = await maria.select(sql);
 
     // 비밀번호 메일로 보내기
     if (rows.value.isMember === 'Y') {
@@ -84,7 +84,7 @@ exports.findPassword = async (ctx) => {
 
         // 생성한 비밀번호 DB저장
         sql = `UPDATE users SET password = "${hashPw}" WHERE accountid = "${email}"`;
-        rows = await connon.update(sql);
+        rows = await maria.update(sql);
         
         // 메일 전송
         mail.sendMail(email, newPw);
@@ -101,7 +101,7 @@ exports.userInfo = async (ctx) => {
     let { email } = ctx.request.body;
 
     const sql = `SELECT accountid, password, name, phone, wallet IF(COUNT(accountid) > 0, "Y", "N") AS isMember FROM users WHERE accountid="${email}"`;
-    const rows = await connon.select(sql);
+    const rows = await maria.select(sql);
 
     // 비밀번호 메일로 보내기
     if (rows.value.isMember === 'N') {
@@ -119,6 +119,6 @@ exports.userUpdate = async (ctx) => {
     const newPw = svc.makePassword(password, 'other');
 
     const sql = `UPDATE users SET name = "${name}", password = "${newPw}" WHERE accountid = "${email}"`;
-    const rows = await connon.update(sql);
+    const rows = await maria.update(sql);
     ctx.body = rows;
 }
