@@ -8,7 +8,7 @@ exports.signin = async (ctx) => {
     let { email, password } = ctx.request.body;
     password = svc.makePassword(password, 'other');
 
-    const sql = `SELECT accountid, name, phone, wallet, CASE WHEN count(*) = 1 THEN "true" ELSE "false" END AS admitYn FROM users WHERE auth="admin" AND accountid="${email}" AND password="${password}"`;
+    const sql = `SELECT accountid, name, phone, auth, wallet, CASE WHEN count(*) = 1 THEN "true" ELSE "false" END AS admitYn FROM users WHERE auth="admin" AND accountid="${email}" AND password="${password}"`;
     const rows = await maria.select(sql);
     console.log(sql);
 
