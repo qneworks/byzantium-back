@@ -5,6 +5,13 @@ const router = new Router();
 // 관리자 로그인
 router.post('/signin', model.signin);
 
+// 주문확인
+router.get('/trans', model.order);
+
+// 회원현황
+router.get('/membership', model.membership);
+
+
 // 토큰 생성
 router.get('/tronTest', model.tronTest);
 
