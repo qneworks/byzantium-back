@@ -2,16 +2,30 @@ const svc = require('../../utils/service');
 const maria = require('../../utils/mariaDB');
 const lang = require('../../config/lang');
 const tronweb = require('../../tronWeb/tronWeb');
-const { all } = require('.');
 
 // 로그인
 exports.signin = async (ctx) => {
     let { email, password } = ctx.request.body;
     password = svc.makePassword(password, 'other');
 
-    const sql = `SELECT accountid, name, phone, auth, wallet, CASE WHEN count(*) = 1 THEN "true" ELSE "false" END AS admitYn FROM users WHERE auth="admin" AND accountid="${email}" AND password="${password}"`;
+    const sql = `
+    SELECT 
+        accountid, 
+        name, 
+        phone, 
+        auth, 
+        wallet, 
+        CASE 
+            WHEN count(accountid) = 1 THEN "true" 
+            ELSE "false" 
+        END AS admitYn 
+    FROM 
+        users 
+    WHERE 
+        auth="admin" 
+        AND accountid="${email}" 
+        AND password="${password}"`;
     const rows = await maria.select(sql);
-    console.log(sql);
 
     // JWT 
     if (rows.value.admitYn === 'true') {
@@ -28,78 +42,125 @@ exports.signin = async (ctx) => {
     ctx.body = rows;
 }
 
+
+// 주문확인 where절 생성
+const setOrderWhere  = (start, end, searchkey, searchvalue) => {
+    let filter = ``;
+    if (searchkey === 'owner' && !!searchvalue) {
+        filter = ` AND (SELECT bank_owner FROM users u WHERE u.userid = t.buyer) LIKE '%${searchvalue}%' `;
+    } else if (searchkey === 'buyer' && !!searchvalue) {
+        filter = ` AND (SELECT name FROM users u WHERE u.userid = t.buyer) LIKE '%${searchvalue}%' `;
+    } else if (searchkey === 'userid' && !!searchvalue) {
+        filter = ` AND (SELECT name FROM users u WHERE u.userid = t.userid) LIKE '%${searchvalue}%' `;
+    }
+
+    let where = `
+        DATE_FORMAT(t.ctime, '%Y%m%d') between '${start}' AND '${end}'
+        ${filter}
+    `
+    return where;
+}
+
 // 주문확인
 exports.order = async (ctx) => {
     let { start, end, searchkey, searchvalue, page, limit } = ctx.request.query;
-    
-    let rowNum = (Number(page)-1) * Number(limit);
-    let sql =  ``;
-    sql += `SELECT `;
-    sql += `@ROWNUM:=@ROWNUM + 1 AS num, `;
-    sql += `t.orderid, `;
-    sql += `IF(t.category = 'sell', '팝니다', '삽니다') AS category, `;
-    sql += `(SELECT name FROM users u WHERE u.userid = t.userid) AS userid, `;
-    sql += `(SELECT name FROM users u WHERE u.userid = t.buyer) AS buyer, `;
-    sql += `t.coin, `;
-    sql += `t.price, `;
-    sql += `t.bankinfo, `;
-    sql += `(SELECT bank_owner FROM users u WHERE u.userid = t.buyer) AS owner, `;
-    sql += `t.ctime, `;
-    sql += `t.status `;
-    sql += `FROM `;
-    sql += `trans t, `;
-    sql += `(SELECT @ROWNUM:=${rowNum}) AS R `;
-    sql += `WHERE `;
-    sql += `DATE_FORMAT(t.ctime, '%Y%m%d') between '${start}' AND '${end}' `
-    
-    // 필터
-    if (searchkey === 'owner' && !searchkey) {
-        sql += ` AND (SELECT bank_owner FROM users u WHERE u.userid = t.buyer) = '${searchvalue}' `;
-    } else if (searchkey === 'buyer' && !searchkey) {
-        sql += ` AND (SELECT name FROM users u WHERE u.userid = t.buyer) = '${searchvalue}' `;
-    } else if (searchkey === 'userid' && !searchkey) {
-        sql += ` AND (SELECT name FROM users u WHERE u.userid = t.userid) = '${searchvalue}' `;
-    }
+    let where = setOrderWhere(start, end, searchkey, searchvalue);
 
-    // 페이징
-    sql += `LIMIT ${rowNum}, ${limit}`
-    console.log(sql);
+    // totalCnt가 List보다 아래에 있으면 에러남... 왜?
+    // totalCnt
+    let sql = `
+        SELECT 
+            COUNT(t.transid) AS totalCnt
+        FROM 
+            trans t
+        WHERE 
+            ${where}
+    `;
+    let totalCnt = Number((await maria.select(sql)).value.totalCnt);
+
+    // List
+    let rowNum = (Number(page)-1) * Number(limit);
+    sql = `
+        SELECT 
+            @ROWNUM:=@ROWNUM + 1 AS num,
+            t.orderid,
+            t.category,
+            (SELECT name FROM users u WHERE u.userid = t.userid) AS userid,
+            (SELECT name FROM users u WHERE u.userid = t.buyer) AS buyer,
+            t.coin,
+            t.price,
+            t.bankinfo,
+            (SELECT bank_owner FROM users u WHERE u.userid = t.buyer) AS owner,
+            t.ctime,
+            t.status
+        FROM 
+            trans t,
+            (SELECT @ROWNUM:=${rowNum}) AS r
+        WHERE 
+            ${where}
+        LIMIT ${rowNum}, ${limit}
+    `;
     const rows = await maria.selectList(sql);
+    rows.totalCnt = totalCnt;
     ctx.body = rows;
 }
+
 
 // 회원현황
 exports.membership = async (ctx) => {
-    let { filter, value } = ctx.request.body;
+    let { searchkey, searchvalue, page, limit } = ctx.request.query;
 
-    let sql = `@ROWNUM:=@ROWNUM+1 AS num, accountid, name, phone, auth, wallet, coin, ctype, referee, block FROM users, (SELECT @ROWNUM:=0) AS R WHERE auth="user" `;
-    if (filter === 'name' && !value) {
-        sql += `AND name = "${value}"`;
-    } else if (filter === 'aa' && !value) {
-        sql += `AND name = "${value}"`;
+    let where = ``;
+    if (searchkey === 'name' && !!searchvalue) {
+        where = `AND name LIKE "%${searchvalue}%"`;
+    } else if (searchkey === 'referee' && !!searchvalue) {
+        where = `AND referee LIKE "%${searchvalue}%"`;
     }
 
+    // totalCnt
+    let sql = `
+        SELECT 
+            COUNT(userid) AS totalCnt
+        FROM 
+            users
+        WHERE 
+            auth = 'user'
+            ${where}
+    `;
+    let totalCnt = Number((await maria.select(sql)).value.totalCnt);
+
+    // List
+    let rowNum = (Number(page)-1) * Number(limit);
+    sql = `
+        SELECT 
+            @ROWNUM:=@ROWNUM + 1 AS num,
+            accountid,
+            name,
+            phone,
+            auth,
+            wallet,
+            coin,
+            ctype,
+            referee,
+            block
+        FROM
+            users,
+            (SELECT @ROWNUM:=${rowNum}) AS r
+        WHERE
+            auth = 'user'
+            ${where}
+        LIMIT ${rowNum}, ${limit}
+    `;
     const rows = await maria.selectList(sql);
+    rows.totalCnt = totalCnt;
     ctx.body = rows;
 }
 
+// 여기 아래로는 테스트용 ...
 exports.tronTest = async () => {
     console.log('Tron Token Test!');
 
     const account = await tronweb.createAccount();
     console.dir(account);
     //await tronweb.isConnect();
-}
-
-
-exports.createToken = async () => {
-    const account = await tronweb.getAccount();
-    console.dir(account);
-
-    const result = await tronweb.createToken();
-    console.dir(result);
-
-    
-
-    return null;
 }

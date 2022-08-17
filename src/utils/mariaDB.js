@@ -52,14 +52,10 @@ exports.select = async (sql) => {
 exports.selectList = async (sql) => {
   let conn, rows;
   let returnData = utils.dataSet;
-
-  console.log(sql);
   try {
     conn = await pool.getConnection();
     rows = await conn.query(sql);
-
-    console.dir(rows);
-
+    
     // 데이터 변환?
     returnData.value = new Array(rows)[0];
     returnData.code = '0';

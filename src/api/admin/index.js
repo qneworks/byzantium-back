@@ -12,13 +12,11 @@ router.get('/trans', model.order);
 router.get('/membership', model.membership);
 
 
-// 토큰 생성
+
+
+
+
+// 트론 테스트
 router.get('/tronTest', model.tronTest);
-
-// 토큰 생성
-router.get('/createToken', model.createToken);
-
-// 지갑 정보확인
-//router.post('/getAccount', model.getAccount);
 
 module.exports = router;
