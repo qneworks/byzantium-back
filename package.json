@@ -1,6 +1,6 @@
 {
   "name": "byzantium-back",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "비잔티움 프로젝트 백엔드",
   "main": "index.js",
   "scripts": {
