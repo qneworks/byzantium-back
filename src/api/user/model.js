@@ -8,21 +8,31 @@ const tronweb = require('../../tronWeb/tronWeb');
 // 로그인
 exports.signin = async (ctx) => {
     let { email, password } = ctx.request.body;
-    password = svc.makePassword(password, 'other');
-
-    const sql = `SELECT accountid, name, phone, auth, wallet, IF(COUNT(accountid) > 0, "Y", "N") AS admitYn FROM users WHERE auth="user" AND accountid="${email}" AND password="${password}"`;
+    //password = svc.makePassword(password, 'other');
+    const sql = `
+        SELECT 
+        accountid, 
+        name,  
+        auth
+        FROM 
+        users 
+        WHERE 
+        auth="admin" 
+        AND accountid="${email}" 
+        AND password="${password}"
+    `;
     const rows = await maria.select(sql);
+    const bool = !!rows.value;
 
-    // JWT 
-    if (rows.value.admitYn === 'Y') {
-        rows.value.wallet = JSON.parse(rows.value.wallet);
+    // JWT
+    if (bool) {
         let token = await svc.makeToken(rows.value.accountid, rows.value.name);
-        ctx.cookies.set('token', token, {
-            maxAge : 1000 * 60 * 60 * 24 * 3,
-            httpOnly : true,
+        ctx.cookies.set("token", token, {
+        maxAge: 1000 * 60 * 60 * 24 * 3,
+        httpOnly: true,
         });
     } else {
-        rows.code = '1';
+        rows.code = "1";
         rows.message = lang.ACCUONT.DISAGREEMENT;
     }
     ctx.body = rows;
