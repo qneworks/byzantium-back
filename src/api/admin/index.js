@@ -5,6 +5,9 @@ const router = new Router();
 // 관리자 로그인
 router.post('/signin', model.signin);
 
+// 계좌정보 수정
+router.patch('/bank_modify', model.bankModify);
+
 // 주문확인
 router.get('/trans', model.order);
 

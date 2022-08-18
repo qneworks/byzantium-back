@@ -31,7 +31,7 @@ exports.signin = async (ctx) => {
 // 회원가입
 exports.signup = async (ctx) => {
     let { email, password, name, phone } = ctx.request.body;
-    password = svc.makePassword(password, 'other');
+    //password = svc.makePassword(password, 'other');
 
     // 아이디 중복확인
     let sql = `SELECT IF(count(accountid) > 0, "Y", "N") AS isMember FROM users WHERE accountid="${email}"`;

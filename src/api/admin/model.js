@@ -1,74 +1,111 @@
-const svc = require('../../utils/service');
-const maria = require('../../utils/mariaDB');
-const lang = require('../../config/lang');
-const tronweb = require('../../tronWeb/tronWeb');
+const svc = require("../../utils/service");
+const maria = require("../../utils/mariaDB");
+const lang = require("../../config/lang");
+const tronweb = require("../../tronWeb/tronWeb");
 
 // 로그인
 exports.signin = async (ctx) => {
-    let { email, password } = ctx.request.body;
-    password = svc.makePassword(password, 'other');
+  let { email, password } = ctx.request.body;
+  //password = svc.makePassword(password, "other");
 
-    const sql = `
+  const sql = `
     SELECT 
-        accountid, 
-        name, 
-        phone, 
-        auth, 
-        wallet, 
-        CASE 
-            WHEN count(accountid) = 1 THEN "true" 
-            ELSE "false" 
-        END AS admitYn 
+      accountid, 
+      name,  
+      auth
     FROM 
-        users 
+      users 
     WHERE 
-        auth="admin" 
-        AND accountid="${email}" 
-        AND password="${password}"`;
-    const rows = await maria.select(sql);
+      auth="admin" 
+      AND accountid="${email}" 
+      AND password="${password}"
+  `;
+  const rows = await maria.select(sql);
+  const bool = !!rows.value;
 
-    // JWT 
-    if (rows.value.admitYn === 'true') {
-        rows.value.wallet = JSON.parse(rows.value.wallet);
-        let token = await svc.makeToken(rows.value.accountid, rows.value.name);
-        ctx.cookies.set('token', token, {
-            maxAge : 1000 * 60 * 60 * 24 * 3,
-            httpOnly : true,
-        });
-    } else {
-        rows.code = '1';
-        rows.message = lang.ACCUONT.DISAGREEMENT;
-    }
-    ctx.body = rows;
-}
+  // JWT
+  if (bool) {
+    let token = await svc.makeToken(rows.value.accountid, rows.value.name);
+    ctx.cookies.set("token", token, {
+      maxAge: 1000 * 60 * 60 * 24 * 3,
+      httpOnly: true,
+    });
+  } else {
+    rows.code = "1";
+    rows.message = lang.ACCUONT.DISAGREEMENT;
+  }
+  ctx.body = rows;
+};
 
+exports.bankModify = async (ctx) => {
+  let { email, bank_name, bank_no, bank_owner } = ctx.request.body;
+  let sql = `
+    UPDATE 
+        users
+    SET 
+        bank_name = '${bank_name}',
+        bank_no = '${bank_no}',
+        bank_owner = '${bank_owner}'
+    WHERE
+        accountid = '${email}'
+    `;
+
+  let rows = await maria.update(sql);
+  console.log(rows);
+
+  if (rows.code === "0") {
+    sql = `
+            SELECT 
+            accountid, 
+            name, 
+            phone, 
+            auth, 
+            wallet, 
+            CASE 
+                WHEN count(accountid) = 1 THEN "true" 
+                ELSE "false" 
+            END AS admitYn,
+            coin,
+            bank_name,
+            bank_owner,
+            bank_no
+        FROM 
+            users 
+        WHERE 
+            auth="admin" 
+            AND accountid="${email}" 
+        `;
+    rows = await maria.select(sql);
+  }
+  ctx.body = rows;
+};
 
 // 주문확인 where절 생성
-const setOrderWhere  = (start, end, searchkey, searchvalue) => {
-    let filter = ``;
-    if (searchkey === 'owner' && !!searchvalue) {
-        filter = ` AND (SELECT bank_owner FROM users u WHERE u.userid = t.buyer) LIKE '%${searchvalue}%' `;
-    } else if (searchkey === 'buyer' && !!searchvalue) {
-        filter = ` AND (SELECT name FROM users u WHERE u.userid = t.buyer) LIKE '%${searchvalue}%' `;
-    } else if (searchkey === 'userid' && !!searchvalue) {
-        filter = ` AND (SELECT name FROM users u WHERE u.userid = t.userid) LIKE '%${searchvalue}%' `;
-    }
+const setOrderWhere = (start, end, searchkey, searchvalue) => {
+  let filter = ``;
+  if (searchkey === "owner" && !!searchvalue) {
+    filter = ` AND (SELECT bank_owner FROM users u WHERE u.userid = t.buyer) LIKE '%${searchvalue}%' `;
+  } else if (searchkey === "buyer" && !!searchvalue) {
+    filter = ` AND (SELECT name FROM users u WHERE u.userid = t.buyer) LIKE '%${searchvalue}%' `;
+  } else if (searchkey === "userid" && !!searchvalue) {
+    filter = ` AND (SELECT name FROM users u WHERE u.userid = t.userid) LIKE '%${searchvalue}%' `;
+  }
 
-    let where = `
+  let where = `
         DATE_FORMAT(t.ctime, '%Y%m%d') between '${start}' AND '${end}'
         ${filter}
-    `
-    return where;
-}
+    `;
+  return where;
+};
 
 // 주문확인
 exports.order = async (ctx) => {
-    let { start, end, searchkey, searchvalue, page, limit } = ctx.request.query;
-    let where = setOrderWhere(start, end, searchkey, searchvalue);
+  let { start, end, searchkey, searchvalue, page, limit } = ctx.request.query;
+  let where = setOrderWhere(start, end, searchkey, searchvalue);
 
-    // totalCnt가 List보다 아래에 있으면 에러남... 왜?
-    // totalCnt
-    let sql = `
+  // totalCnt가 List보다 아래에 있으면 에러남... 왜?
+  // totalCnt
+  let sql = `
         SELECT 
             COUNT(t.transid) AS totalCnt
         FROM 
@@ -76,11 +113,11 @@ exports.order = async (ctx) => {
         WHERE 
             ${where}
     `;
-    let totalCnt = Number((await maria.select(sql)).value.totalCnt);
+  let totalCnt = Number((await maria.select(sql)).value.totalCnt);
 
-    // List
-    let rowNum = (Number(page)-1) * Number(limit);
-    sql = `
+  // List
+  let rowNum = (Number(page) - 1) * Number(limit);
+  sql = `
         SELECT 
             @ROWNUM:=@ROWNUM + 1 AS num,
             t.orderid,
@@ -100,25 +137,24 @@ exports.order = async (ctx) => {
             ${where}
         LIMIT ${rowNum}, ${limit}
     `;
-    const rows = await maria.selectList(sql);
-    rows.totalCnt = totalCnt;
-    ctx.body = rows;
-}
-
+  const rows = await maria.selectList(sql);
+  rows.totalCnt = totalCnt;
+  ctx.body = rows;
+};
 
 // 회원현황
 exports.membership = async (ctx) => {
-    let { searchkey, searchvalue, page, limit } = ctx.request.query;
+  let { searchkey, searchvalue, page, limit } = ctx.request.query;
 
-    let where = ``;
-    if (searchkey === 'name' && !!searchvalue) {
-        where = `AND name LIKE "%${searchvalue}%"`;
-    } else if (searchkey === 'referee' && !!searchvalue) {
-        where = `AND referee LIKE "%${searchvalue}%"`;
-    }
+  let where = ``;
+  if (searchkey === "name" && !!searchvalue) {
+    where = `AND name LIKE "%${searchvalue}%"`;
+  } else if (searchkey === "referee" && !!searchvalue) {
+    where = `AND referee LIKE "%${searchvalue}%"`;
+  }
 
-    // totalCnt
-    let sql = `
+  // totalCnt
+  let sql = `
         SELECT 
             COUNT(userid) AS totalCnt
         FROM 
@@ -127,11 +163,11 @@ exports.membership = async (ctx) => {
             auth = 'user'
             ${where}
     `;
-    let totalCnt = Number((await maria.select(sql)).value.totalCnt);
+  let totalCnt = Number((await maria.select(sql)).value.totalCnt);
 
-    // List
-    let rowNum = (Number(page)-1) * Number(limit);
-    sql = `
+  // List
+  let rowNum = (Number(page) - 1) * Number(limit);
+  sql = `
         SELECT 
             @ROWNUM:=@ROWNUM + 1 AS num,
             accountid,
@@ -151,16 +187,16 @@ exports.membership = async (ctx) => {
             ${where}
         LIMIT ${rowNum}, ${limit}
     `;
-    const rows = await maria.selectList(sql);
-    rows.totalCnt = totalCnt;
-    ctx.body = rows;
-}
+  const rows = await maria.selectList(sql);
+  rows.totalCnt = totalCnt;
+  ctx.body = rows;
+};
 
 // 여기 아래로는 테스트용 ...
 exports.tronTest = async () => {
-    console.log('Tron Token Test!');
+  console.log("Tron Token Test!");
 
-    const account = await tronweb.createAccount();
-    console.dir(account);
-    //await tronweb.isConnect();
-}
+  const account = await tronweb.createAccount();
+  console.dir(account);
+  //await tronweb.isConnect();
+};
