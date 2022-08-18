@@ -37,43 +37,65 @@ exports.signin = async (ctx) => {
   ctx.body = rows;
 };
 
+// 계좌정보 조회
+exports.bankinfo = async (ctx) => {
+  let { email } = ctx.request.query;
+  console.log(ctx.request.query)
+  console.log(email)
+
+  let sql = `
+    SELECT 
+      coin,
+      wallet,
+      bank_name,
+      bank_no,
+      bank_owner
+    FROM 
+      users
+    WHERE 
+      accountid = '${email}'
+  `;
+  console.log(sql);
+  const rows = await maria.select(sql);
+  ctx.body = rows;
+};
+
 exports.bankModify = async (ctx) => {
   let { email, bank_name, bank_no, bank_owner } = ctx.request.body;
   let sql = `
     UPDATE 
-        users
+      users
     SET 
-        bank_name = '${bank_name}',
-        bank_no = '${bank_no}',
-        bank_owner = '${bank_owner}'
+      bank_name = '${bank_name}',
+      bank_no = '${bank_no}',
+      bank_owner = '${bank_owner}'
     WHERE
-        accountid = '${email}'
+      accountid = '${email}'
     `;
 
   let rows = await maria.update(sql);
-  console.log(rows);
 
   if (rows.code === "0") {
     sql = `
-            SELECT 
-            accountid, 
-            name, 
-            phone, 
-            auth, 
-            wallet, 
-            CASE 
-                WHEN count(accountid) = 1 THEN "true" 
-                ELSE "false" 
-            END AS admitYn,
-            coin,
-            bank_name,
-            bank_owner,
-            bank_no
-        FROM 
-            users 
-        WHERE 
-            auth="admin" 
-            AND accountid="${email}" 
+      SELECT 
+        accountid, 
+        name, 
+        phone, 
+        auth, 
+        wallet, 
+        CASE 
+            WHEN count(accountid) = 1 THEN "true" 
+            ELSE "false" 
+        END AS admitYn,
+        coin,
+        bank_name,
+        bank_owner,
+        bank_no
+      FROM 
+        users 
+      WHERE 
+        auth="admin" 
+        AND accountid="${email}" 
         `;
     rows = await maria.select(sql);
   }

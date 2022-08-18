@@ -11,15 +11,15 @@ exports.signin = async (ctx) => {
     //password = svc.makePassword(password, 'other');
     const sql = `
         SELECT 
-        accountid, 
-        name,  
-        auth
+            accountid, 
+            name,  
+            auth
         FROM 
-        users 
+            users 
         WHERE 
-        auth="user" 
-        AND accountid="${email}" 
-        AND password="${password}"
+            auth="user" 
+            AND accountid="${email}" 
+            AND password="${password}"
     `;
     const rows = await maria.select(sql);
     const bool = !!rows.value;
