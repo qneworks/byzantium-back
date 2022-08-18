@@ -17,7 +17,7 @@ exports.signin = async (ctx) => {
         FROM 
         users 
         WHERE 
-        auth="admin" 
+        auth="user" 
         AND accountid="${email}" 
         AND password="${password}"
     `;
