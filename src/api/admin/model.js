@@ -200,7 +200,8 @@ exports.membership = async (ctx) => {
             coin,
             ctype,
             referee,
-            block
+            block,
+            ctime
         FROM
             users,
             (SELECT @ROWNUM:=${rowNum}) AS r

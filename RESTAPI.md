@@ -20,6 +20,12 @@
   request Url : http://localhost:8800/api/user/findPassword
   response : { value = {/*실제 데이터 */}, code = "" this.msg = "" }
 
+### 회원현황
+  Method : get
+  request parameter : {searchkey : '', searchvalue : ''}
+  request Url : http://localhost:8800/api/admin/membership
+  response : { value = {/*실제 데이터 */}, code = "" this.msg = "" }
+
 
 ### trans
   Method : get
