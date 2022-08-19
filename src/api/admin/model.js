@@ -10,8 +10,8 @@ exports.signin = async (ctx) => {
   let { email, password } = ctx.request.body;
   //password = svc.makePassword(password, "other");
 
-  const field = 'accountid, name, auth'
-  const where = `auth="admin" AND accountid="${email}" AND password="${password}"`
+  const field = "accountid, name, auth";
+  const where = `auth="admin" AND accountid="${email}" AND password="${password}"`;
   const sql = SELECT(field, TB.USERS, where);
   const rows = await maria.select(sql);
   const bool = !!rows.value;
@@ -34,9 +34,10 @@ exports.signin = async (ctx) => {
 exports.bankinfo = async (ctx) => {
   let { email } = ctx.request.query;
 
-  const field = 'coin, wallet, bank_name, bank_no, bank_owner'
-  const where = `accountid = '${email}'`
+  const field = "coin, wallet, bank_name, bank_no, bank_owner";
+  const where = `accountid = '${email}'`;
   const sql = SELECT(field, TB.USERS, where);
+  console.log(sql);
   const rows = await maria.select(sql);
 
   ctx.body = rows;
@@ -45,7 +46,11 @@ exports.bankinfo = async (ctx) => {
 exports.bankModify = async (ctx) => {
   let { email, bank_name, bank_no, bank_owner } = ctx.request.body;
 
-  const usql = UPDATE(`bank_name = '${bank_name}', bank_no = '${bank_no}', bank_owner = '${bank_owner}'`, TB.USERS, `accountid = "${email}"`);
+  const usql = UPDATE(
+    `bank_name = '${bank_name}', bank_no = '${bank_no}', bank_owner = '${bank_owner}'`,
+    TB.USERS,
+    `accountid = "${email}"`
+  );
   let rows = await maria.update(usql);
 
   ctx.body = rows;
@@ -53,25 +58,29 @@ exports.bankModify = async (ctx) => {
 
 // 주문확인
 exports.order = async (ctx) => {
-  console.log('connect API order!');
+  console.log("connect API order!");
   let { start, end, searchkey, searchvalue, page, limit } = ctx.request.query;
-  let sField = searchkey === 'owner' ? 'bank_owner':'name';
-  let sWhere = searchkey === 'userid' ? 'userid':'buyer';
+  let sField = searchkey === "owner" ? "bank_owner" : "name";
+  let sWhere = searchkey === "userid" ? "userid" : "buyer";
 
   let field, sql, table, where;
   // totalCnt가 List보다 아래에 있으면 에러남... 왜?
   // totalCnt
-  field = 'COUNT(t.transid) AS totalCnt'
-  where = `DATE_FORMAT(t.ctime, '%Y%m%d') between DATE_FORMAT('${start}', '%Y%m%d') AND DATE_FORMAT('${end}', '%Y%m%d') AND (SELECT ${sField} FROM users u WHERE u.userid = t.${sWhere}) LIKE '%${searchvalue}%'`
+  field = "COUNT(t.transid) AS totalCnt";
+  where =
+    `DATE_FORMAT(t.ctime, '%Y%m%d') between DATE_FORMAT('${start}', '%Y%m%d') AND DATE_FORMAT('${end}', '%Y%m%d') ` +
+    `AND (SELECT ${sField} FROM users u WHERE u.userid = t.${sWhere}) LIKE '%${searchvalue}%'`;
   sql = SELECT(field, `trans t`, where);
   let totalCnt = Number((await maria.select(sql)).value.totalCnt);
 
   // List
   let rowNum = (Number(page) - 1) * Number(limit);
-  field = `@ROWNUM:=@ROWNUM + 1 AS num, t.orderid, t.category, t.userid, (SELECT name FROM users u WHERE u.userid = t.userid) AS username, (SELECT name FROM users u WHERE u.userid = t.buyer) AS buyer,
-    t.coin, t.price, t.bankinfo, (SELECT bank_owner FROM users u WHERE u.userid = t.buyer) AS owner, DATE_FORMAT(t.ctime, '%Y-%m-%d') AS ctime, t.status`;
+  field =
+    `@ROWNUM:=@ROWNUM + 1 AS num, t.orderid, t.category, CAST(t.userid as VARCHAR(12)) AS userid, ` +
+    `(SELECT name FROM users u WHERE u.userid = t.userid) AS username, (SELECT name FROM users u WHERE u.userid = t.buyer) AS buyer, ` +
+    `t.coin, t.price, t.bankinfo, (SELECT bank_owner FROM users u WHERE u.userid = t.buyer) AS owner, DATE_FORMAT(t.ctime, '%Y-%m-%d') AS ctime, t.status`;
   table = `trans t, (SELECT @ROWNUM:=${rowNum}) AS r`;
-  where = where + ` LIMIT ${rowNum}, ${limit}`
+  where = where + ` LIMIT ${rowNum}, ${limit}`;
   sql = SELECT(field, table, where);
   const rows = await maria.selectList(sql);
 
@@ -86,8 +95,8 @@ exports.membership = async (ctx) => {
   let field, sql, table, where;
   // totalCnt가 List보다 아래에 있으면 에러남... 왜?
   // totalCnt
-  field = 'COUNT(userid) AS totalCnt'
-  where = `auth = 'user' AND ${searchkey} LIKE "%${searchvalue}%"`
+  field = "COUNT(userid) AS totalCnt";
+  where = `auth = 'user' AND ${searchkey} LIKE "%${searchvalue}%"`;
   sql = SELECT(field, TB.USERS, where);
   let totalCnt = Number((await maria.select(sql)).value.totalCnt);
 
@@ -95,7 +104,7 @@ exports.membership = async (ctx) => {
   let rowNum = (Number(page) - 1) * Number(limit);
   field = `@ROWNUM:=@ROWNUM + 1 AS num, accountid, name, phone, auth, wallet, coin, ctype, referee, block, ctime`;
   table = `users, (SELECT @ROWNUM:=${rowNum}) AS r`;
-  where = where + ` LIMIT ${rowNum}, ${limit}`
+  where = where + ` LIMIT ${rowNum}, ${limit}`;
   sql = SELECT(field, table, where);
   const rows = await maria.selectList(sql);
 
