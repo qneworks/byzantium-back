@@ -13,6 +13,38 @@ const pool = mariadb.createPool({
   connectionLimit: config.database.limit,
 });
 
+/**********************************************************************
+ * 쿼리 작성시 테이블명 또는 기본 문법의 오류를 줄이기 위한 용도로 사용
+ **********************************************************************/
+exports.TB = {
+  USERS: 'users',
+  TRANS: 'trans'
+}
+
+exports.SELECT = (fields, table, where = null) => {
+  let query = `SELECT ${fields} FROM ${table} `
+  if (where) {
+    query += ` WHERE ${where}`
+  }
+  return query
+}
+
+exports.INSERT = (fields, table, values) => {
+  const query = `INSERT INTO ${table} (${fields}) VALUES (${values})`
+  return query
+}
+
+exports.UPDATE = (fields, table, where) => {
+  let query = `UPDATE ${table} SET ${fields} `
+  if (where) {
+    query += ` WHERE ${where}`
+  }
+  return query
+}
+
+/**********************************************************************
+ * 데이터베이스 쿼리 유틸리티 메소드
+ **********************************************************************/
 exports.insert = async (sql) => {
   let conn;
   let returnData = utils.dataSet;
@@ -55,7 +87,7 @@ exports.selectList = async (sql) => {
   try {
     conn = await pool.getConnection();
     rows = await conn.query(sql);
-    
+
     // 데이터 변환?
     returnData.value = new Array(rows)[0];
     returnData.code = '0';
