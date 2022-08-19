@@ -27,15 +27,15 @@ const setMailerOption = async (to, newPw) => {
 
 // 메일 전송
 module.exports.sendMail = async (accountid, newPw) => {
-    let mailer = await createMailer();
-    let option = await setMailerOption(accountid, newPw);
+  let mailer = await createMailer();
+  let option = await setMailerOption(accountid, newPw);
 
-    mailer.sendMail(option, function(error, info) {
-        if (error) {
-            console.log(error);
-        } else {
-            console.log(info.response);
-        }
-    });
-    mailer.close();
+  mailer.sendMail(option, function (error, info) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log(info.response);
+    }
+  });
+  mailer.close();
 }

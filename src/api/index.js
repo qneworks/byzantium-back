@@ -10,22 +10,22 @@ const router = new Router();
 
 // 로그인 토큰 검증
 router.use('/', async (ctx, next) => {
-    let path = ctx.path;
-    console.log(__debug(__filename, __line), 'Call => ' + path)
+  let path = ctx.path;
+  console.log(__debug(__filename, __line), 'Call => ' + path)
 
-    // 검증이 필요한 애들.... 아직 화면이 없어서 비움..
-    let pages = []
-    if (pages.length > 0 && path.includes(pages)) {
-        let res = await svc.verifyToken(ctx);
-        if (res.code === "0") {
-            await next();
-        } else {
-            ctx.body = res;
-        }
+  // 검증이 필요한 애들.... 아직 화면이 없어서 비움..
+  let pages = []
+  if (pages.length > 0 && path.includes(pages)) {
+    let res = await svc.verifyToken(ctx);
+    if (res.code === "0") {
+      await next();
     } else {
-        await next();
+      ctx.body = res;
     }
-    
+  } else {
+    await next();
+  }
+
 })
 
 router.use('/user', user.routes());
