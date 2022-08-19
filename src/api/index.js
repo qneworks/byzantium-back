@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const Koa = require('koa');
 const Router = require('koa-router');
 const user = require('./user');
@@ -10,7 +11,7 @@ const router = new Router();
 // 로그인 토큰 검증
 router.use('/', async (ctx, next) => {
     let path = ctx.path;
-    console.log('Call => ' + path);
+    console.log(__debug(__filename, __line), 'Call => ' + path)
 
     // 검증이 필요한 애들.... 아직 화면이 없어서 비움..
     let pages = []
@@ -24,6 +25,7 @@ router.use('/', async (ctx, next) => {
     } else {
         await next();
     }
+    
 })
 
 router.use('/user', user.routes());
