@@ -12,7 +12,7 @@ router.get('/bank_info', model.bankinfo);
 router.patch('/bank_modify', model.bankModify);
 
 // 주문확인
-router.get('/trans', model.order);
+router.get('/order', model.order);
 
 // 회원현황
 router.get('/membership', model.membership);

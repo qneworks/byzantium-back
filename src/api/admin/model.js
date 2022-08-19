@@ -3,23 +3,16 @@ const maria = require("../../utils/mariaDB");
 const lang = require("../../config/lang");
 const tronweb = require("../../tronWeb/tronWeb");
 
+const { TB, SELECT, UPDATE, INSERT } = maria;
+
 // 로그인
 exports.signin = async (ctx) => {
   let { email, password } = ctx.request.body;
   //password = svc.makePassword(password, "other");
 
-  const sql = `
-    SELECT 
-      accountid, 
-      name,  
-      auth
-    FROM 
-      users 
-    WHERE 
-      auth="admin" 
-      AND accountid="${email}" 
-      AND password="${password}"
-  `;
+  const field = 'accountid, name, auth'
+  const where = `auth="admin" AND accountid="${email}" AND password="${password}"`
+  const sql = SELECT(field, TB.USERS, where);
   const rows = await maria.select(sql);
   const bool = !!rows.value;
 
@@ -40,126 +33,48 @@ exports.signin = async (ctx) => {
 // 계좌정보 조회
 exports.bankinfo = async (ctx) => {
   let { email } = ctx.request.query;
-  console.log(ctx.request.query)
-  console.log(email)
 
-  let sql = `
-    SELECT 
-      coin,
-      wallet,
-      bank_name,
-      bank_no,
-      bank_owner
-    FROM 
-      users
-    WHERE 
-      accountid = '${email}'
-  `;
-  console.log(sql);
+  const field = 'coin, wallet, bank_name, bank_no, bank_owner'
+  const where = `accountid = '${email}'`
+  const sql = SELECT(field, TB.USERS, where);
   const rows = await maria.select(sql);
+
   ctx.body = rows;
 };
 
 exports.bankModify = async (ctx) => {
   let { email, bank_name, bank_no, bank_owner } = ctx.request.body;
-  let sql = `
-    UPDATE 
-      users
-    SET 
-      bank_name = '${bank_name}',
-      bank_no = '${bank_no}',
-      bank_owner = '${bank_owner}'
-    WHERE
-      accountid = '${email}'
-    `;
 
-  let rows = await maria.update(sql);
+  const usql = UPDATE(`bank_name = '${bank_name}', bank_no = '${bank_no}', bank_owner = '${bank_owner}'`, TB.USERS, `accountid = "${email}"`);
+  let rows = await maria.update(usql);
 
-  if (rows.code === "0") {
-    sql = `
-      SELECT 
-        accountid, 
-        name, 
-        phone, 
-        auth, 
-        wallet, 
-        CASE 
-            WHEN count(accountid) = 1 THEN "true" 
-            ELSE "false" 
-        END AS admitYn,
-        coin,
-        bank_name,
-        bank_owner,
-        bank_no
-      FROM 
-        users 
-      WHERE 
-        auth="admin" 
-        AND accountid="${email}" 
-        `;
-    rows = await maria.select(sql);
-  }
   ctx.body = rows;
-};
-
-// 주문확인 where절 생성
-const setOrderWhere = (start, end, searchkey, searchvalue) => {
-  let filter = ``;
-  if (searchkey === "owner" && !!searchvalue) {
-    filter = ` AND (SELECT bank_owner FROM users u WHERE u.userid = t.buyer) LIKE '%${searchvalue}%' `;
-  } else if (searchkey === "buyer" && !!searchvalue) {
-    filter = ` AND (SELECT name FROM users u WHERE u.userid = t.buyer) LIKE '%${searchvalue}%' `;
-  } else if (searchkey === "userid" && !!searchvalue) {
-    filter = ` AND (SELECT name FROM users u WHERE u.userid = t.userid) LIKE '%${searchvalue}%' `;
-  }
-
-  let where = `
-        DATE_FORMAT(t.ctime, '%Y%m%d') between '${start}' AND '${end}'
-        ${filter}
-    `;
-  return where;
 };
 
 // 주문확인
 exports.order = async (ctx) => {
+  console.log('connect API order!');
   let { start, end, searchkey, searchvalue, page, limit } = ctx.request.query;
-  let where = setOrderWhere(start, end, searchkey, searchvalue);
+  let sField = searchkey === 'owner' ? 'bank_owner':'name';
+  let sWhere = searchkey === 'userid' ? 'userid':'buyer';
 
+  let field, sql, table, where;
   // totalCnt가 List보다 아래에 있으면 에러남... 왜?
   // totalCnt
-  let sql = `
-        SELECT 
-            COUNT(t.transid) AS totalCnt
-        FROM 
-            trans t
-        WHERE 
-            ${where}
-    `;
+  field = 'COUNT(t.transid) AS totalCnt'
+  where = `DATE_FORMAT(t.ctime, '%Y%m%d') between DATE_FORMAT('${start}', '%Y%m%d') AND DATE_FORMAT('${end}', '%Y%m%d') AND (SELECT ${sField} FROM users u WHERE u.userid = t.${sWhere}) LIKE '%${searchvalue}%'`
+  sql = SELECT(field, `trans t`, where);
   let totalCnt = Number((await maria.select(sql)).value.totalCnt);
 
   // List
   let rowNum = (Number(page) - 1) * Number(limit);
-  sql = `
-        SELECT 
-            @ROWNUM:=@ROWNUM + 1 AS num,
-            t.orderid,
-            t.category,
-            (SELECT name FROM users u WHERE u.userid = t.userid) AS userid,
-            (SELECT name FROM users u WHERE u.userid = t.buyer) AS buyer,
-            t.coin,
-            t.price,
-            t.bankinfo,
-            (SELECT bank_owner FROM users u WHERE u.userid = t.buyer) AS owner,
-            t.ctime,
-            t.status
-        FROM 
-            trans t,
-            (SELECT @ROWNUM:=${rowNum}) AS r
-        WHERE 
-            ${where}
-        LIMIT ${rowNum}, ${limit}
-    `;
+  field = `@ROWNUM:=@ROWNUM + 1 AS num, t.orderid, t.category, t.userid, (SELECT name FROM users u WHERE u.userid = t.userid) AS username, (SELECT name FROM users u WHERE u.userid = t.buyer) AS buyer,
+    t.coin, t.price, t.bankinfo, (SELECT bank_owner FROM users u WHERE u.userid = t.buyer) AS owner, DATE_FORMAT(t.ctime, '%Y-%m-%d') AS ctime, t.status`;
+  table = `trans t, (SELECT @ROWNUM:=${rowNum}) AS r`;
+  where = where + ` LIMIT ${rowNum}, ${limit}`
+  sql = SELECT(field, table, where);
   const rows = await maria.selectList(sql);
+
   rows.totalCnt = totalCnt;
   ctx.body = rows;
 };
@@ -168,49 +83,22 @@ exports.order = async (ctx) => {
 exports.membership = async (ctx) => {
   let { searchkey, searchvalue, page, limit } = ctx.request.query;
 
-  let where = ``;
-  if (searchkey === "name" && !!searchvalue) {
-    where = `AND name LIKE "%${searchvalue}%"`;
-  } else if (searchkey === "referee" && !!searchvalue) {
-    where = `AND referee LIKE "%${searchvalue}%"`;
-  }
-
+  let field, sql, table, where;
+  // totalCnt가 List보다 아래에 있으면 에러남... 왜?
   // totalCnt
-  let sql = `
-        SELECT 
-            COUNT(userid) AS totalCnt
-        FROM 
-            users
-        WHERE 
-            auth = 'user'
-            ${where}
-    `;
+  field = 'COUNT(userid) AS totalCnt'
+  where = `auth = 'user' AND ${searchkey} LIKE "%${searchvalue}%"`
+  sql = SELECT(field, TB.USERS, where);
   let totalCnt = Number((await maria.select(sql)).value.totalCnt);
 
   // List
   let rowNum = (Number(page) - 1) * Number(limit);
-  sql = `
-        SELECT 
-            @ROWNUM:=@ROWNUM + 1 AS num,
-            accountid,
-            name,
-            phone,
-            auth,
-            wallet,
-            coin,
-            ctype,
-            referee,
-            block,
-            ctime
-        FROM
-            users,
-            (SELECT @ROWNUM:=${rowNum}) AS r
-        WHERE
-            auth = 'user'
-            ${where}
-        LIMIT ${rowNum}, ${limit}
-    `;
+  field = `@ROWNUM:=@ROWNUM + 1 AS num, accountid, name, phone, auth, wallet, coin, ctype, referee, block, ctime`;
+  table = `users, (SELECT @ROWNUM:=${rowNum}) AS r`;
+  where = where + ` LIMIT ${rowNum}, ${limit}`
+  sql = SELECT(field, table, where);
   const rows = await maria.selectList(sql);
+
   rows.totalCnt = totalCnt;
   ctx.body = rows;
 };

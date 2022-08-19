@@ -22,7 +22,7 @@
 
 ### 회원현황
   Method : get
-  request parameter : {searchkey : '', searchvalue : ''}
+  request parameter : {searchkey : '', searchvalue : '', page : '', limit : ''}
   request Url : http://localhost:8800/api/admin/membership
   response : { value = {/*실제 데이터 */}, code = "" this.msg = "" }
 
