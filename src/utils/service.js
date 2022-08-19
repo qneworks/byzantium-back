@@ -55,3 +55,11 @@ exports.verifyToken = async (ctx) => {
   returnData.message = lang.SUCCESS;
   return returnData;
 };
+
+// 
+exports.throwErr = async (msg) => {
+  let returnData = utils.dataSet;
+  returnData.code = '1';
+  returnData.message = msg;
+  return returnData
+}

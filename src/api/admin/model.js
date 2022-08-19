@@ -76,7 +76,7 @@ exports.order = async (ctx) => {
   // List
   let rowNum = (Number(page) - 1) * Number(limit);
   field =
-    `@ROWNUM:=@ROWNUM + 1 AS num, t.orderid, t.category, CAST(t.userid as VARCHAR(12)) AS userid, ` +
+    `@ROWNUM:=@ROWNUM + 1 AS num, t.orderid, t.category, t.userid, ` +
     `(SELECT name FROM users u WHERE u.userid = t.userid) AS username, (SELECT name FROM users u WHERE u.userid = t.buyer) AS buyer, ` +
     `t.coin, t.price, t.bankinfo, (SELECT bank_owner FROM users u WHERE u.userid = t.buyer) AS owner, DATE_FORMAT(t.ctime, '%Y-%m-%d') AS ctime, t.status`;
   table = `trans t, (SELECT @ROWNUM:=${rowNum}) AS r`;
@@ -91,6 +91,11 @@ exports.order = async (ctx) => {
 // 회원현황
 exports.membership = async (ctx) => {
   let { searchkey, searchvalue, page, limit } = ctx.request.query;
+  
+  if(searchkey === 'none') {
+    let err = svc.throwErr('검색필터를 입력하세요.');
+    ctx.body = err;
+  }
 
   let field, sql, table, where;
   // totalCnt가 List보다 아래에 있으면 에러남... 왜?
