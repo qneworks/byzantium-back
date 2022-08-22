@@ -54,3 +54,11 @@ app.listen(8800, () => {
   // console.log('Listening to port 8800');
   console.log(__debug(__filename, __line), 'Listening to port 8800')
 });
+
+/*
+  Database, Koa 연동 BigInt 오류에 처리 방법
+  https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/BigInt
+  BigInt는 직렬화할 수 없기 때문에, JSON.stringify()에 BigInt를 포함한 값을 전달한다면 TypeError가 발생합니다.
+  대신, 필요한 경우 자신만의 toJSON 메서드를 만들 수 있습니다.
+*/
+BigInt.prototype.toJSON = () => this.toString();
