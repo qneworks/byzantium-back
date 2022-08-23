@@ -11,6 +11,9 @@ router.get('/bank_info', model.bankinfo);
 // 계좌정보 수정
 router.patch('/bank_modify', model.bankModify);
 
+// 출금관리 신청
+router.put('/order_output', model.orderOutput);
+
 // 주문확인
 router.get('/order', model.order);
 

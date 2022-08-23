@@ -56,6 +56,31 @@ exports.bankModify = async (ctx) => {
   ctx.body = rows;
 };
 
+exports.orderOutput = async (ctx) => {
+  let { email, category, loginEmail, coin, price, bankinfo, txid, status, comm } = ctx.request.body;
+
+  console.log('orderOutput in =================')
+
+  const sql = SELECT (
+    `MAX(transid)+1 AS transid`,
+    TB.TRANS,
+  )
+  let transid = await (await maria.select(sql)).value.transid.toString();
+  transid = transid.replace('n', '');
+  console.dir(transid)
+  
+  const  isql = INSERT(
+    `transid, userid, orderid, category, buyer, coin, price, bankinfo, txid, status, comm`,
+    TB.TRANS,
+    `${transid}, (select userid from users where accountid = '${email}'), date_format(now(), '%Y%m%d%H%i%s'),
+    '${category}', (select userid from users where accountid = '${loginEmail}'), '${coin}', '${price}',
+    (select concat(bank_name, '/', bank_no, '/', bank_owner) from users where accountid = '${loginEmail}'), '${txid}', '${status}', '${comm}'`
+  );
+  let rows = await maria.insert(isql);
+
+  ctx.body = rows;
+};
+
 // 주문확인
 exports.order = async (ctx) => {
   console.log("connect API order!");
@@ -82,6 +107,7 @@ exports.order = async (ctx) => {
   table = `trans t, (SELECT @ROWNUM:=${rowNum}) AS r`;
   where = where + ` LIMIT ${rowNum}, ${limit}`;
   sql = SELECT(field, table, where);
+  console.log(sql);
   const rows = await maria.selectList(sql);
 
   rows.totalCnt = totalCnt;
