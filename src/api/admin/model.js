@@ -117,12 +117,6 @@ exports.order = async (ctx) => {
 // 회원현황
 exports.membership = async (ctx) => {
   let { searchkey, searchvalue, page, limit } = ctx.request.query;
-  
-  if(searchkey === 'none') {
-    let err = svc.throwErr('검색필터를 입력하세요.');
-    ctx.body = err;
-  }
-
   let field, sql, table, where;
   // totalCnt가 List보다 아래에 있으면 에러남... 왜?
   // totalCnt
