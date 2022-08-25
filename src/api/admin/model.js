@@ -131,6 +131,8 @@ exports.membership = async (ctx) => {
   table = `users, (SELECT @ROWNUM:=${rowNum}) AS r`;
   where = where + ` LIMIT ${rowNum}, ${limit}`;
   sql = SELECT(field, table, where);
+
+  console.log(sql);
   const rows = await maria.selectList(sql);
 
   rows.totalCnt = totalCnt;
