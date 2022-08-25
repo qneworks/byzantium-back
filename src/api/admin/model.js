@@ -121,7 +121,10 @@ exports.membership = async (ctx) => {
   // totalCnt가 List보다 아래에 있으면 에러남... 왜?
   // totalCnt
   field = "COUNT(userid) AS totalCnt";
-  where = `auth = 'user' AND ${searchkey} LIKE "%${searchvalue}%"`;
+  where = `auth = 'user' `;
+  if (searchkey != 'none') {
+    where += `AND ${searchkey} LIKE "%${searchvalue}%" `;
+  }
   sql = SELECT(field, TB.USERS, where);
   let totalCnt = Number((await maria.select(sql)).value.totalCnt);
 
